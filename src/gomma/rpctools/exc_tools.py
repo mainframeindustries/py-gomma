@@ -131,7 +131,7 @@ def _transfer_traceback_attributes(new_result, old_result, te_data):
     return new_result
 
 
-def traceback_exception_deserialize(te: dict) -> traceback.TracebackException:
+def traceback_exception_deserialize(te: dict) -> traceback.TracebackException:  # noqa: C901
     tbtype = te.get("type", "TracebackException:1.0")
     assert tbtype in ["TracebackException:1.0"]
 
