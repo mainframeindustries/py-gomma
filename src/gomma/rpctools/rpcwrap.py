@@ -144,7 +144,6 @@ def wrapped_rpc_call(func):
     Decorator which applies the appropriate wrap function to the
     """
     if inspect.iscoroutinefunction(func):
-
         # Tecnically we don't need to have "wrapper" async, and await inside, but
         # could just pass the coroutine through.  But then the wrapper won't be marked
         # as a coroutinefunction.  Even functools.wraps() cannot fix that up.
@@ -190,7 +189,6 @@ def wrapped_rpc_handler(errorhandler=None):
 
     def helper(func):
         if inspect.iscoroutinefunction(func):
-
             # Tecnically we don't need to have "wrapper" async, and await inside, but
             # could just pass the coroutine through.  But then the wrapper won't be marked
             # as a coroutinefunction.  Even functools.wraps() cannot fix that up.

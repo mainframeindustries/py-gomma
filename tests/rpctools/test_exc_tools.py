@@ -43,7 +43,7 @@ def test_dynamic_exception():
 
 def test_syntax_error_serialization():
     """Test that SyntaxError serialization and deserialization preserves special attributes"""
-    
+
     # Create a SyntaxError with typical attributes
     try:
         compile("invalid syntax here $$", "test_file.py", "exec")
@@ -53,12 +53,12 @@ def test_syntax_error_serialization():
     # Serialize
     serial = exc_tools.traceback_exception_serialize(tbe)
     assert serial["type"] == "TracebackException:1.0"
-    
+
     # Should have syntax error data
     assert "syntax_error" in serial
     assert serial["syntax_error"] is not None
     syntax_data = serial["syntax_error"]
-    
+
     # Verify syntax error attributes are preserved
     assert syntax_data["filename"] == "test_file.py"
     assert syntax_data["lineno"] == "1"  # Note: stored as string in some Python versions
@@ -68,20 +68,21 @@ def test_syntax_error_serialization():
 
     # Deserialize
     deserialized = exc_tools.traceback_exception_deserialize(serial)
-    
+
     # Verify the deserialized exception preserves syntax error attributes
-    assert hasattr(deserialized, 'filename')
-    assert hasattr(deserialized, 'lineno')
-    assert hasattr(deserialized, 'msg')
-    assert hasattr(deserialized, 'offset')
-    assert hasattr(deserialized, 'text')
-    
+    assert hasattr(deserialized, "filename")
+    assert hasattr(deserialized, "lineno")
+    assert hasattr(deserialized, "msg")
+    assert hasattr(deserialized, "offset")
+    assert hasattr(deserialized, "text")
+
     assert deserialized.filename == "test_file.py"
     assert deserialized.lineno == 1 or deserialized.lineno == "1"  # Handle both int and string
     assert deserialized.msg == "invalid syntax"
-    
+
     # Verify that the exception type is still SyntaxError (with warnings suppressed)
     import warnings
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         assert issubclass(deserialized.exc_type, SyntaxError)

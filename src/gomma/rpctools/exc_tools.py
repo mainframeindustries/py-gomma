@@ -67,30 +67,30 @@ def traceback_exception_serialize(te: traceback.TracebackException) -> dict:
         "__context__": traceback_exception_serialize(te.__context__) if te.__context__ else None,
         "stack": stack_summary_serialize(te.stack),
     }
-    
+
     # Handle both old and new exception type attributes
-    if hasattr(te, 'exc_type_str'):
+    if hasattr(te, "exc_type_str"):
         # Python 3.13+ approach
         result["exc_type_str"] = te.exc_type_str
-        result["exc_type_module"] = getattr(te, 'exc_type_module', None)
-        result["exc_type_qualname"] = getattr(te, 'exc_type_qualname', None)
+        result["exc_type_module"] = getattr(te, "exc_type_module", None)
+        result["exc_type_qualname"] = getattr(te, "exc_type_qualname", None)
         # Still include the old format for backward compatibility
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            if hasattr(te, 'exc_type'):
+            if hasattr(te, "exc_type"):
                 result["exc_type"] = exc_type_serialize(te.exc_type)
     else:
         # Pre-Python 3.13 approach
         result["exc_type"] = exc_type_serialize(te.exc_type)
-    
+
     for name in _traceback_exception_attrs:
         if hasattr(te, name):
             result[name] = getattr(te, name)
-    
+
     # Handle syntax errors
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
-        if hasattr(te, 'exc_type') and hasattr(te.exc_type, '__name__'):
+        if hasattr(te, "exc_type") and hasattr(te.exc_type, "__name__"):
             if issubclass(te.exc_type, SyntaxError):
                 se = {}
                 for name in _traceback_exception_syntax_attrs:
@@ -98,7 +98,7 @@ def traceback_exception_serialize(te: traceback.TracebackException) -> dict:
                 result["syntax_error"] = se
             else:
                 result["syntax_error"] = None
-        elif hasattr(te, 'exc_type_str') and 'SyntaxError' in te.exc_type_str:
+        elif hasattr(te, "exc_type_str") and "SyntaxError" in te.exc_type_str:
             # Handle syntax errors in Python 3.13+
             se = {}
             for name in _traceback_exception_syntax_attrs:
@@ -106,7 +106,7 @@ def traceback_exception_serialize(te: traceback.TracebackException) -> dict:
             result["syntax_error"] = se
         else:
             result["syntax_error"] = None
-    
+
     return result
 
 
@@ -115,19 +115,19 @@ def _transfer_traceback_attributes(new_result, old_result, te_data):
     new_result.__cause__ = old_result.__cause__
     new_result.__context__ = old_result.__context__
     new_result.stack = old_result.stack
-    
+
     # Set other attributes
     for name in _traceback_exception_attrs:
         if hasattr(new_result, name) and name in te_data:
             setattr(new_result, name, te_data[name])
-    
+
     # Handle syntax error attributes
     if te_data.get("syntax_error"):
         for name in _traceback_exception_syntax_attrs:
             value = te_data["syntax_error"].get(name)
             if value is not None and hasattr(new_result, name):
                 setattr(new_result, name, value)
-    
+
     return new_result
 
 
@@ -147,13 +147,13 @@ def traceback_exception_deserialize(te: dict) -> traceback.TracebackException:
             raise RuntimeError()
         except RuntimeError as e:
             result = traceback.TracebackException.from_exception(e)
-    
+
     result.__cause__ = traceback_exception_deserialize(te["__cause__"]) if te["__cause__"] else None
     result.__context__ = traceback_exception_deserialize(te["__context__"]) if te["__context__"] else None
     result.stack = stack_summary_deserialize(te["stack"])
-    
+
     # Handle exception type deserialization for different Python versions
-    if "exc_type_str" in te and hasattr(result, 'exc_type_str'):
+    if "exc_type_str" in te and hasattr(result, "exc_type_str"):
         # Python 3.13+ approach - use the new string-based attributes
         # These are read-only in Python 3.14+, so we need to reconstruct the object
         # with the correct exception type
@@ -170,7 +170,7 @@ def traceback_exception_deserialize(te: dict) -> traceback.TracebackException:
             except (ImportError, AttributeError):
                 # Create a fake exception type
                 exc_type = FakeException.create(module, qualname, f"<class '{module}.{qualname}'>")
-        
+
         # Create a new TracebackException with the correct exc_type
         # This is necessary because exc_type is read-only in newer Python versions
         try:
@@ -192,21 +192,21 @@ def traceback_exception_deserialize(te: dict) -> traceback.TracebackException:
             except Exception as new_e:
                 new_result = traceback.TracebackException.from_exception(new_e)
                 result = _transfer_traceback_attributes(new_result, result, te)
-        
+
         # For the direct assignment case, we still need to set other attributes manually
-        if hasattr(result, 'exc_type'):  # Only if we successfully set exc_type directly
+        if hasattr(result, "exc_type"):  # Only if we successfully set exc_type directly
             # Set other attributes
             for name in _traceback_exception_attrs:
                 if hasattr(result, name) and name in te:
                     setattr(result, name, te[name])
-            
+
             # Handle syntax error attributes
             if te.get("syntax_error"):
                 for name in _traceback_exception_syntax_attrs:
                     value = te["syntax_error"].get(name)
                     if value is not None and hasattr(result, name):
                         setattr(result, name, value)
-    
+
     return result
 
 
