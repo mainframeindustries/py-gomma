@@ -81,7 +81,6 @@ def test_both_decorators():
 
 
 def test_raise_from_wrapped():
-
     errorhandler = Mock()
     wrapped = rpcwrap.wrap_rpc_handler(errorhandler, problemhandler)
     errorhandler.assert_called()
